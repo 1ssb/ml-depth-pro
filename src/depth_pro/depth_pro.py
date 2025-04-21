@@ -22,7 +22,6 @@ from .network.encoder import DepthProEncoder
 from .network.fov import FOVNetwork
 from .network.vit_factory import VIT_CONFIG_DICT, ViTPreset, create_vit
 
-
 @dataclass
 class DepthProConfig:
     """Configuration for DepthPro."""
@@ -244,7 +243,6 @@ class DepthPro(nn.Module):
     def infer(
         self,
         x: torch.Tensor,
-        f_px: Optional[Union[float, torch.Tensor]] = None,
         interpolation_mode="bilinear",
     ) -> Mapping[str, torch.Tensor]:
         """Infer depth and fov for a given image.
@@ -257,7 +255,6 @@ class DepthPro(nn.Module):
         Args:
         ----
             x (torch.Tensor): Input image
-            f_px (torch.Tensor): Optional focal length in pixels corresponding to `x`.
             interpolation_mode (str): Interpolation function for downsampling/upsampling. 
 
         Returns:
@@ -279,9 +276,7 @@ class DepthPro(nn.Module):
             )
 
         canonical_inverse_depth, fov_deg = self.forward(x)
-        if f_px is None:
-            f_px = 0.5 * W / torch.tan(0.5 * torch.deg2rad(fov_deg.to(torch.float)))
-        
+        f_px = 0.5 * W / torch.tan(0.5 * torch.deg2rad(fov_deg.to(torch.float)))
         inverse_depth = canonical_inverse_depth * (W / f_px)
         f_px = f_px.squeeze()
 
